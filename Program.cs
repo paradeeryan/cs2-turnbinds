@@ -22,12 +22,34 @@ public class KeysConverter : JsonConverter<Keys>
     public override Keys Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
         string keyName = reader.GetString();
-        return (Keys)Enum.Parse(typeof(Keys), keyName);
+        // try parse with _ prefix
+        if (Enum.TryParse(typeof(Keys), "_" + keyName, out var result2))
+        {
+            return (Keys) result2;
+        }
+        
+        // try parse
+        if (Enum.TryParse(typeof(Keys), keyName, out var result))
+        {
+            return (Keys) result;
+        }
+       
+        
+        throw new JsonException($"Invalid key name: {keyName}");
     }
 
     public override void Write(Utf8JsonWriter writer, Keys value, JsonSerializerOptions options)
     {
-        writer.WriteStringValue(value.ToString());
+        var str = value.ToString();
+        // replace _ prefix with nothing
+        if (str.StartsWith("_"))
+        {
+            writer.WriteStringValue(str.Substring(1));
+        }
+        else
+        {
+            writer.WriteStringValue(str);
+        }
     }
 }
 
@@ -134,10 +156,10 @@ class Program
             WriteIndented = true
         };
         serializerOptions.Converters.Add(new KeysConverter());
-        
+
+        string configFile;
         if (!configFileExists)
         {
-            Console.WriteLine("Config file not found, making default config");
             var defaultConfig = new Config
             {
                 Yaw = new List<int> { 80, 160, 240 },
@@ -151,10 +173,13 @@ class Program
                 Dec = Keys.OEM_MINUS,
                 Exit = Keys.F2
             };
-            File.WriteAllText(configFilePath, JsonSerializer.Serialize(defaultConfig, serializerOptions));
+            configFile = JsonSerializer.Serialize(defaultConfig, serializerOptions);
+            File.WriteAllText(configFilePath, configFile);
         }
-        
-        var configFile = File.ReadAllText(configFilePath);
+        else
+        {
+            configFile = File.ReadAllText(configFilePath);
+        }
         
         // use system.json
         var config = JsonSerializer.Deserialize<Config>(configFile, serializerOptions);
@@ -162,19 +187,46 @@ class Program
         {
             throw new Exception("Config file is empty");
         }
+
+        Console.WriteLine(@"
+   ____   _____ ______    _____ _    _ _____  ______ 
+  / __ \ / ____|  ____|  / ____| |  | |  __ \|  ____|
+ | |  | | |    | |__    | (___ | |  | | |__) | |__   
+ | |  | | |    |  __|    \___ \| |  | |  _  /|  __|  
+ | |__| | |____| |____ _ ____) | |__| | | \ \| |     
+  \____/ \_____|______(_)_____/ \____/|_|  \_\_|     ");
+        
+        Console.WriteLine();
+        
+        
+        Console.WriteLine("Yaw speeds: " + string.Join(", ", config.Yaw));
+        Console.WriteLine("Sensitivity: " + config.Sensitivity);
+        Console.WriteLine("M_Yaw: " + config.M_Yaw);
+        Console.WriteLine("Left: " + config.Left);
+        Console.WriteLine("Right: " + config.Right);
+        Console.WriteLine("Toggle Yaw: " + config.Toggle);
+        Console.WriteLine("Pause: " + config.Pause);
+        Console.WriteLine("Increase Yaw: " + config.Inc);
+        Console.WriteLine("Decrease Yaw: " + config.Dec);
+        Console.WriteLine("Exit: " + config.Exit);
+        
+        Console.WriteLine();
+        Console.WriteLine("To edit bindings, edit config.json and restart the program.");
+        Console.WriteLine("Use the keynames from here without the VK_ : https://learn.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes");
+        Console.WriteLine("IE: VK_LBUTTON is LBUTTON etc, A-Z are the same, 0-9 are the same, F1-F24 are the same, etc.");
+        
+        
+        Console.WriteLine();
+        Console.WriteLine("Current yaw speed: " + config.Yaw[0]);
+        Console.WriteLine("PAUSED, press " + config.Pause + " to unpause");
         
         int currentYawIndex = 0;
-        
-        bool paused = true; // Pause state for left mouse button
-        int yawSpeed = config.Yaw[currentYawIndex];
-        double sensitivity = config.Sensitivity;
-        double m_yaw = config.M_Yaw;
-
+        bool paused = true;
         var calculator = new MouseMoveCalculator();
 
         while (true)
         {
-            var movement = calculator.CalculateMovement( yawSpeed, sensitivity, m_yaw);
+            var movement = calculator.CalculateMovement(config.Yaw[currentYawIndex],  config.Sensitivity, config.M_Yaw);
             
             // Check if the left mouse button is pressed and not paused
             if (IsKeyDown((int) config.Left) && !paused)
@@ -194,30 +246,37 @@ class Program
             if (IsKeyDown((int) config.Pause))
             {
                 paused = !paused;
-                Console.WriteLine($"Yaw speed {(paused ? "paused" : "resumed")}");
+                if (paused)
+                {
+                    Console.WriteLine("PAUSED press " + config.Pause + " to unpause");
+                }
+                else
+                {
+                    Console.WriteLine("ACTIVE press " + config.Pause + " to pause");
+                }
                 Thread.Sleep(200); // Delay to avoid multiple toggles with one key press
             }
 
             // Check if the '+' key is pressed to increase yaw speed
-            if (IsKeyDown((int) config.Inc))
+            if (IsKeyDown((int) config.Inc) && !paused)
             {
-                yawSpeed += 10; // Increase yaw speed by 10
+                config.Yaw[currentYawIndex] += 10; // Increase yaw speed by 10
                 Thread.Sleep(200); // Delay to avoid multiple increments with one key press
-                Console.WriteLine($"Yaw speed increased to {yawSpeed}");
+                Console.WriteLine($"Yaw speed increased to {config.Yaw[currentYawIndex]}");
             }
 
             // Check if the '-' key is pressed to decrease yaw speed
-            if (IsKeyDown((int) config.Dec))
+            if (IsKeyDown((int) config.Dec) && !paused)
             {
-                yawSpeed -= 10; // Decrease yaw speed by 10
+                config.Yaw[currentYawIndex] -= 10; // Decrease yaw speed by 10
                 Thread.Sleep(200); // Delay to avoid multiple decrements with one key press
-                Console.WriteLine($"Yaw speed decreased to {yawSpeed}");
+                Console.WriteLine($"Yaw speed decreased to {config.Yaw[currentYawIndex]}");
             }
             
-            if (IsKeyDown((int) config.Toggle))
+            if (IsKeyDown((int) config.Toggle) && !paused)
             {
                 currentYawIndex = (currentYawIndex + 1) % config.Yaw.Count;
-                yawSpeed = config.Yaw[currentYawIndex];
+                Console.WriteLine($"Yaw speed toggled to {config.Yaw[currentYawIndex]}");
                 Thread.Sleep(200); // Delay to avoid multiple toggles with one key press
             }
 
