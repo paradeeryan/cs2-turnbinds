@@ -1,5 +1,7 @@
 # CS2 Turnbinds
 
+![image](https://github.com/ws-cs2/cs2-turnbinds/assets/149922947/02da5f15-f803-4e53-aa2b-06a5a2ffba2d)
+
 ## Overview
 
 The CS2 Turnbinds program is a customizable tool designed to assist gamers in executing precise turning movements in games. It allows users to configure specific yaw speeds, mouse sensitivity, and key bindings to automate mouse movements for turning. This is functionality that used to be in the game in CounterStrike Source and is needed to complete many surf maps.
