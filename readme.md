@@ -6,6 +6,20 @@
 
 The CS2 Turnbinds program is a customizable tool designed to assist gamers in executing precise turning movements in games. It allows users to configure specific yaw speeds, mouse sensitivity, and key bindings to automate mouse movements for turning. This is functionality that used to be in the game in CounterStrike Source and is needed to complete many surf maps.
 
+## Anti-cheat software
+
+From t5mat turnbinds (the program this was based on):
+
+> The program does not patch or inject anything into the game.
+> 
+> Apart from simulating mouse input, it doesn't really do anything suspicious.
+> 
+> It would be fair to say it's as VAC bannable as an AutoHotkey script.
+> 
+> Anti-cheat software (FACEIT AC, ...) can easily detect the simulation of mouse movement though, and either prevent it or prevent the program from running completely. This is expected, just don't actively try to use this program in unintended scenarios.
+
+We had alot of evidence that simulating mouse input was not bannable in CS:GO. I used t5mat's turnbind program for years. This program does not do anything differently however cs2 is a different game so there may be a risk.
+
 ## Configuration
 
 The program reads its configuration from a `config.json` file, which it will create with default settings if it does not already exist. You can customize this file to suit your preferences. Here are the configurable options:
