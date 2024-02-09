@@ -21,6 +21,8 @@ The program reads its configuration from a `config.json` file, which it will cre
 - `Dec`: The key used to decrease the current yaw speed.
 - `Exit`: The key used to exit the program.
 
+![image](https://github.com/ws-cs2/cs2-turnbinds/assets/149922947/8550fec1-3727-47d8-bcd6-860a4841e455)
+
 ## Usage
 
 1. Run the program once, it will make `config.json` with default keybinds.
