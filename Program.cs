@@ -1,9 +1,10 @@
 ﻿using System.Runtime.InteropServices;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Text.Json.Serialization.Metadata;
 using cs2_turnbinds;
 
-class Config
+public class Config
 {
     public List<int> Yaw { get; set; }
     public double Sensitivity { get; set; }
@@ -15,6 +16,12 @@ class Config
     public Keys Inc { get; set; }
     public Keys Dec { get; set; }
     public Keys Exit { get; set; }
+}
+
+[JsonSerializable(typeof(Config))]
+[JsonSourceGenerationOptions(WriteIndented = true, PropertyNamingPolicy = JsonKnownNamingPolicy.SnakeCaseLower, Converters = new[] {typeof(KeysConverter)})]
+public partial class ConfigJsonContext : JsonSerializerContext
+{
 }
 
 public class KeysConverter : JsonConverter<Keys>
@@ -150,12 +157,6 @@ class Program
         var configFilePath = "config.json";
         var configFileExists = File.Exists(configFilePath);
         
-        var serializerOptions = new JsonSerializerOptions
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
-            WriteIndented = true
-        };
-        serializerOptions.Converters.Add(new KeysConverter());
 
         string configFile;
         if (!configFileExists)
@@ -173,7 +174,7 @@ class Program
                 Dec = Keys.OEM_MINUS,
                 Exit = Keys.F2
             };
-            configFile = JsonSerializer.Serialize(defaultConfig, serializerOptions);
+            configFile = JsonSerializer.Serialize(defaultConfig, typeof(Config), ConfigJsonContext.Default);
             File.WriteAllText(configFilePath, configFile);
         }
         else
@@ -182,7 +183,7 @@ class Program
         }
         
         // use system.json
-        var config = JsonSerializer.Deserialize<Config>(configFile, serializerOptions);
+        var config = JsonSerializer.Deserialize(configFile, typeof(Config), ConfigJsonContext.Default) as Config;
         if (config == null)
         {
             throw new Exception("Config file is empty");

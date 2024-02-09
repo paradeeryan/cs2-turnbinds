@@ -6,6 +6,7 @@
         <RootNamespace>cs2-turnbinds</RootNamespace>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
+        <ApplicationIcon>appicon.ico</ApplicationIcon>
     </PropertyGroup>
 
 </Project>
