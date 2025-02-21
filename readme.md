@@ -1,10 +1,13 @@
 # CS2 Turnbinds
 
-![image](https://github.com/ws-cs2/cs2-turnbinds/assets/149922947/02da5f15-f803-4e53-aa2b-06a5a2ffba2d)
+![image](https://github.com/user-attachments/assets/360251e0-9ed6-4b67-9dfb-df73e77b7cfe)
+
 
 ## Overview
 
-The CS2 Turnbinds program is a customizable tool designed to assist gamers in executing precise turning movements in games. It allows users to configure specific yaw speeds, mouse sensitivity, and key bindings to automate mouse movements for turning. This is functionality that used to be in the game in CounterStrike Source and is needed to complete many surf maps.
+This is a slightly modified version of ws-cs2's cs2-turnbinds project: https://github.com/ws-cs2/cs2-turnbinds
+
+I have taken the liberty to only include the non-personalized notes in this file.
 
 ## Anti-cheat software
 
@@ -17,8 +20,6 @@ From t5mat turnbinds (the program this was based on):
 > It would be fair to say it's as VAC bannable as an AutoHotkey script.
 > 
 > Anti-cheat software (FACEIT AC, ...) can easily detect the simulation of mouse movement though, and either prevent it or prevent the program from running completely. This is expected, just don't actively try to use this program in unintended scenarios.
-
-We had alot of evidence that simulating mouse input was not bannable in CS:GO. I used t5mat's turnbind program for years. This program does not do anything differently however cs2 is a different game so there may be a risk.
 
 ## Configuration
 
@@ -54,6 +55,7 @@ When configuring keys in `config.json`, use the key names from the [Virtual-Key 
  - [t5mat's CS:GO Turnbinds](https://github.com/t5mat/turnbinds) - This program is based on t5mat's original CS:GO Turnbinds program.
  - Spaz - Figuring out how to get mouse movement in CS2
  - [oce.surf Community](https://oce.surf) - Testing
+ - Original creator: https://github.com/ws-cs2 
 
 ## Fork Notes
 
