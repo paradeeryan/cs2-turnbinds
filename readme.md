@@ -54,3 +54,8 @@ When configuring keys in `config.json`, use the key names from the [Virtual-Key 
  - [t5mat's CS:GO Turnbinds](https://github.com/t5mat/turnbinds) - This program is based on t5mat's original CS:GO Turnbinds program.
  - Spaz - Figuring out how to get mouse movement in CS2
  - [oce.surf Community](https://oce.surf) - Testing
+
+## Fork Notes
+
+ - Made a few changes in an attempt to improve the smoothness of the turns
+ - This version of cs2-turnbinds might require a beefier CPU
