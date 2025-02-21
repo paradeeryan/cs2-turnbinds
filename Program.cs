@@ -1,7 +1,6 @@
-﻿using System.Runtime.InteropServices;
+using System.Runtime.InteropServices;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using System.Text.Json.Serialization.Metadata;
 using cs2_turnbinds;
 
 public class Config
@@ -19,29 +18,34 @@ public class Config
 }
 
 [JsonSerializable(typeof(Config))]
-[JsonSourceGenerationOptions(WriteIndented = true, PropertyNamingPolicy = JsonKnownNamingPolicy.SnakeCaseLower, Converters = new[] {typeof(KeysConverter)})]
-public partial class ConfigJsonContext : JsonSerializerContext
-{
-}
+[JsonSourceGenerationOptions(
+    WriteIndented = true,
+    PropertyNamingPolicy = JsonKnownNamingPolicy.SnakeCaseLower,
+    Converters = new[] { typeof(KeysConverter) }
+)]
+public partial class ConfigJsonContext : JsonSerializerContext { }
 
 public class KeysConverter : JsonConverter<Keys>
 {
-    public override Keys Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    public override Keys Read(
+        ref Utf8JsonReader reader,
+        Type typeToConvert,
+        JsonSerializerOptions options
+    )
     {
         string keyName = reader.GetString();
         // try parse with _ prefix
         if (Enum.TryParse(typeof(Keys), "_" + keyName, out var result2))
         {
-            return (Keys) result2;
+            return (Keys)result2;
         }
-        
+
         // try parse
         if (Enum.TryParse(typeof(Keys), keyName, out var result))
         {
-            return (Keys) result;
+            return (Keys)result;
         }
-       
-        
+
         throw new JsonException($"Invalid key name: {keyName}");
     }
 
@@ -65,39 +69,42 @@ class Program
     [StructLayout(LayoutKind.Explicit)]
     struct LARGE_INTEGER
     {
-        [FieldOffset(0)] public long QuadPart;
+        [FieldOffset(0)]
+        public long QuadPart;
     }
-    
-    
+
     [DllImport("user32.dll")]
     static extern void mouse_event(int dwFlags, int dx, int dy, int dwData, int dwExtraInfo);
-    
+
     [DllImport("user32.dll")]
     static extern short GetAsyncKeyState(int vKey);
-    
+
     [DllImport("ntdll.dll")]
-    private static extern uint NtDelayExecution([In] bool Alertable, [In] ref LARGE_INTEGER DelayInterval);
-    
+    private static extern uint NtDelayExecution(
+        [In] bool Alertable,
+        [In] ref LARGE_INTEGER DelayInterval
+    );
+
     [DllImport("kernel32.dll")]
     private static extern bool QueryPerformanceCounter(out long lpPerformanceCount);
 
     [DllImport("kernel32.dll")]
     private static extern bool QueryPerformanceFrequency(out long lpFrequency);
-    
+
     // [DllImport("ntdll.dll")]
     // private static extern int NtQueryTimerResolution(out uint MinimumResolution, out uint MaximumResolution, out uint CurrentResolution);
-    
-    
+
+
     const int MOUSEEVENTF_MOVE = 0x0001;
     const int MOUSEEVENTF_ABSOLUTE = 0x8000;
     const int SM_CXSCREEN = 0;
     const int SM_CYSCREEN = 1;
-    
+
     static void MoveMouse(int deltaX, int deltaY)
     {
         mouse_event(MOUSEEVENTF_MOVE, deltaX, deltaY, 0, (int)IntPtr.Zero);
     }
-    
+
     static void DelayExecutionBy(long hns)
     {
         // Convert the delay from 100-nanosecond intervals to a LARGE_INTEGER
@@ -107,7 +114,7 @@ class Program
         // Call NtDelayExecution
         NtDelayExecution(false, ref interval);
     }
-    
+
     public class MouseMoveCalculator
     {
         private long lastTime;
@@ -124,12 +131,11 @@ class Program
         {
             long currentTime;
             QueryPerformanceCounter(out currentTime);
-            
-            long elapsedTime = currentTime - lastTime;
-            
 
-            // Calculate movement basedp
-            double movement = ((yawspeed / (sensitivity * m_yaw)) * elapsedTime) / frequency;
+            long elapsedTime = currentTime - lastTime;
+
+            // Calculate movement based on yaw speed, sensitivity, and elapsed time
+            double movement = ((yawspeed / (sensitivity * m_yaw)) * elapsedTime) / (frequency / 0.5);
 
             // Accumulate remaining movement fractions to ensure precision
             remainingMovement += movement;
@@ -141,22 +147,19 @@ class Program
             // Update last time for next call
             lastTime = currentTime;
 
-            return (int) movementAmount;
+            return (int)movementAmount;
         }
     }
-    
+
     static bool IsKeyDown(int vk)
     {
         return (GetAsyncKeyState(vk) & 0x8000) != 0;
     }
 
-
     static void Main(string[] args)
     {
-        
         var configFilePath = "config.json";
         var configFileExists = File.Exists(configFilePath);
-        
 
         string configFile;
         if (!configFileExists)
@@ -172,34 +175,41 @@ class Program
                 Pause = Keys.F1,
                 Inc = Keys.OEM_PLUS,
                 Dec = Keys.OEM_MINUS,
-                Exit = Keys.F2
+                Exit = Keys.F2,
             };
-            configFile = JsonSerializer.Serialize(defaultConfig, typeof(Config), ConfigJsonContext.Default);
+            configFile = JsonSerializer.Serialize(
+                defaultConfig,
+                typeof(Config),
+                ConfigJsonContext.Default
+            );
             File.WriteAllText(configFilePath, configFile);
         }
         else
         {
             configFile = File.ReadAllText(configFilePath);
         }
-        
+
         // use system.json
-        var config = JsonSerializer.Deserialize(configFile, typeof(Config), ConfigJsonContext.Default) as Config;
+        var config =
+            JsonSerializer.Deserialize(configFile, typeof(Config), ConfigJsonContext.Default)
+            as Config;
         if (config == null)
         {
             throw new Exception("Config file is empty");
         }
 
-        Console.WriteLine(@"
-   ____   _____ ______    _____ _    _ _____  ______ 
-  / __ \ / ____|  ____|  / ____| |  | |  __ \|  ____|
- | |  | | |    | |__    | (___ | |  | | |__) | |__   
- | |  | | |    |  __|    \___ \| |  | |  _  /|  __|  
- | |__| | |____| |____ _ ____) | |__| | | \ \| |     
-  \____/ \_____|______(_)_____/ \____/|_|  \_\_|     ");
-        
+        Console.WriteLine(
+            @"
+  _______   _    _   _____    _   _   ____    _____   _   _   _____     _____   _ 
+ |__   __| | |  | | |  __ \  | \ | | |  _ \  |_   _| | \ | | |  __ \   / ____| | |
+    | |    | |  | | | |__) | |  \| | | |_) |   | |   |  \| | | |  | | | (___   | |
+    | |    | |  | | |  _  /  | . ` | |  _ <    | |   | . ` | | |  | |  \___ \  | |
+    | |    | |__| | | | \ \  | |\  | | |_) |  _| |_  | |\  | | |__| |  ____) | |_|
+    |_|     \____/  |_|  \_\ |_| \_| |____/  |_____| |_| \_| |_____/  |_____/  (_) "
+        );
+
         Console.WriteLine();
-        
-        
+
         Console.WriteLine("Yaw speeds: " + string.Join(", ", config.Yaw));
         Console.WriteLine("Sensitivity: " + config.Sensitivity);
         Console.WriteLine("M_Yaw: " + config.M_Yaw);
@@ -210,41 +220,61 @@ class Program
         Console.WriteLine("Increase Yaw: " + config.Inc);
         Console.WriteLine("Decrease Yaw: " + config.Dec);
         Console.WriteLine("Exit: " + config.Exit);
-        
+
         Console.WriteLine();
         Console.WriteLine("To edit bindings, edit config.json and restart the program.");
-        Console.WriteLine("Use the keynames from here without the VK_ : https://learn.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes");
-        Console.WriteLine("IE: VK_LBUTTON is LBUTTON etc, A-Z are the same, 0-9 are the same, F1-F24 are the same, etc.");
-        
-        
+        Console.WriteLine(
+            "Use the keynames from here without the VK_ : https://learn.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes"
+        );
+        Console.WriteLine(
+            "IE: VK_LBUTTON is LBUTTON etc, A-Z are the same, 0-9 are the same, F1-F24 are the same, etc."
+        );
+
         Console.WriteLine();
         Console.WriteLine("Current yaw speed: " + config.Yaw[0]);
         Console.WriteLine("PAUSED, press " + config.Pause + " to unpause");
-        
+
         int currentYawIndex = 0;
         bool paused = true;
         var calculator = new MouseMoveCalculator();
 
         while (true)
         {
-            var movement = calculator.CalculateMovement(config.Yaw[currentYawIndex],  config.Sensitivity, config.M_Yaw);
-            
+            /*
+            config.Yaw is doubled internally to account for lines 258 and 268 so
+            that the desired yaw is still being used.
+            It still shows accurate yaw in the terminal window
+            */
+            var movement = calculator.CalculateMovement(
+                2 * config.Yaw[currentYawIndex],
+                config.Sensitivity,
+                config.M_Yaw
+            );
+
             // Check if the left mouse button is pressed and not paused
-            if (IsKeyDown((int) config.Left) && !paused)
+            if (IsKeyDown((int)config.Left) && !paused)
             {
                 // Move the mouse left by the specified speed
-                MoveMouse(-movement, 0);
+
+                for (int i = 0; i < 3; i++) // Increase movement frequency
+                {
+                    MoveMouse(-movement / 3, 0);
+                    //Thread.Sleep(1); // Small delay to prevent CPU overload
+                }
             }
 
             // Check if the right mouse button is pressed and not paused
-            if (IsKeyDown((int) config.Right) && !paused)
+            if (IsKeyDown((int)config.Right) && !paused)
             {
-                // Move the mouse right by the specified speed
-                MoveMouse(movement, 0);
+                for (int i = 0; i < 3; i++) // Increase movement frequency
+                {
+                    MoveMouse(movement / 3, 0);
+                    //Thread.Sleep(1); // Small delay to prevent CPU overload
+                }
             }
 
             // Check if the 'P' key is pressed to toggle pause state for left mouse button
-            if (IsKeyDown((int) config.Pause))
+            if (IsKeyDown((int)config.Pause))
             {
                 paused = !paused;
                 if (paused)
@@ -259,7 +289,7 @@ class Program
             }
 
             // Check if the '+' key is pressed to increase yaw speed
-            if (IsKeyDown((int) config.Inc) && !paused)
+            if (IsKeyDown((int)config.Inc) && !paused)
             {
                 config.Yaw[currentYawIndex] += 10; // Increase yaw speed by 10
                 Thread.Sleep(200); // Delay to avoid multiple increments with one key press
@@ -267,14 +297,14 @@ class Program
             }
 
             // Check if the '-' key is pressed to decrease yaw speed
-            if (IsKeyDown((int) config.Dec) && !paused)
+            if (IsKeyDown((int)config.Dec) && !paused)
             {
                 config.Yaw[currentYawIndex] -= 10; // Decrease yaw speed by 10
                 Thread.Sleep(200); // Delay to avoid multiple decrements with one key press
                 Console.WriteLine($"Yaw speed decreased to {config.Yaw[currentYawIndex]}");
             }
-            
-            if (IsKeyDown((int) config.Toggle) && !paused)
+
+            if (IsKeyDown((int)config.Toggle) && !paused)
             {
                 currentYawIndex = (currentYawIndex + 1) % config.Yaw.Count;
                 Console.WriteLine($"Yaw speed toggled to {config.Yaw[currentYawIndex]}");
@@ -282,13 +312,13 @@ class Program
             }
 
             // Check if the END key is pressed to exit the program
-            if (IsKeyDown((int) config.Exit))
+            if (IsKeyDown((int)config.Exit))
             {
                 Console.WriteLine("Exiting program...");
                 break; // Exit the loop
             }
             
-            DelayExecutionBy(3500);
+            DelayExecutionBy(50);
         }
     }
 }
